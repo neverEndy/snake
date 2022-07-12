@@ -6,6 +6,8 @@ import CoordinateSystem from './CoordinateSystem'
 import { shuffle } from 'lodash'
 import RectangleGraphic from '../Graphic/RectangleGraphic'
 import Collection from '../Collection'
+import Vec2 from '../Vector/Vec2'
+import Event from '../utils/Event'
 
 export type GameOptions = {
   unit: number
@@ -32,6 +34,7 @@ class Game implements IGame {
   boardControl: BoardControl
   coordinateSystem: CoordinateSystem
   randomSeeds: Collection<RectangleGraphic>
+  private removeEvents: Array<ReturnType<Event['addListener']>> = []
   constructor (options: GameConstructor) {
     this.options = options
     this.viewer = options.viewer
@@ -40,7 +43,6 @@ class Game implements IGame {
     this.coordinateSystem = new CoordinateSystem({ ...options, size: this.viewer.container.getBoundingClientRect().width })
     this.snake = new NeverSnake(options.unit)
     this.randomSeeds = this.createRandomSeed()
-    this.coordinateSystem.renderGrid = this.coordinateSystem.renderGrid.bind(this)
     this.init()
   }
 
@@ -71,30 +73,62 @@ class Game implements IGame {
   }
 
   registerSnakeMove () {
-    this.snake.moveEvent.addListener(position => {
+    const handleSnakeGrow = (position: Vec2) => {
       for (const seed of this.randomSeeds.values) {
         if (seed.startPosition.isEqualTo(position)) {
           this.randomSeeds.remove(seed)
           this.snake.grow()
+          console.log(this.snake.body.length)
           break
         }
       }
-    })
+    }
+    const handleBoundaryCollision = (position: Vec2) => {
+      const { lowerRight, upperLeft } = this.coordinateSystem.localBoundary
+      const snakePosition = this.coordinateSystem.toLocal(position)
+      const upperCollision = snakePosition.y < upperLeft.y
+      const lowerCollision = snakePosition.y > lowerRight.y
+      const leftCollision = snakePosition.x < upperLeft.x
+      const rightCollision = snakePosition.x > lowerRight.x
+      if (upperCollision || lowerCollision || leftCollision || rightCollision) {
+        this.stop()
+        this.snake.stop()
+      }
+    }
+    const handleSnakeSelfCollision = (position: Vec2) => {
+      const snakePosition = this.coordinateSystem.toLocal(position)
+      for (const snakeBodyRec of this.snake.body) {
+        const bodyItemPosition = this.coordinateSystem.toLocal(snakeBodyRec.startPosition)
+        if (bodyItemPosition.isEqualTo(snakePosition)) {
+          this.stop()
+          this.snake.stop()
+        }
+      }
+    }
+    const removeEvents = [
+      this.snake.moveEvent.addListener(handleSnakeGrow),
+      this.snake.moveEvent.addListener(handleBoundaryCollision),
+      this.snake.moveEvent.addListener(handleSnakeSelfCollision)
+    ]
+    this.removeEvents.concat(removeEvents)
   }
 
   registerControl () {
-    this.boardControl.moveUpEvent.addListener(() => {
-      this.snake.move('up')
-    })
-    this.boardControl.moveRightEvent.addListener(() => {
-      this.snake.move('right')
-    })
-    this.boardControl.moveDownEvent.addListener(() => {
-      this.snake.move('down')
-    })
-    this.boardControl.moveLeftEvent.addListener(() => {
-      this.snake.move('left')
-    })
+    const removeEvents = [
+      this.boardControl.moveUpEvent.addListener(() => {
+        this.snake.move('up')
+      }),
+      this.boardControl.moveRightEvent.addListener(() => {
+        this.snake.move('right')
+      }),
+      this.boardControl.moveDownEvent.addListener(() => {
+        this.snake.move('down')
+      }),
+      this.boardControl.moveLeftEvent.addListener(() => {
+        this.snake.move('left')
+      })
+    ]
+    this.removeEvents.concat(removeEvents)
   }
 
   start () {
@@ -110,6 +144,7 @@ class Game implements IGame {
 
   stop () {
     this.boardControl.stop()
+    this.removeEvents.forEach(remove => remove())
   }
 }
 

@@ -11,7 +11,7 @@ class NeverSnake extends Graphic {
   body: Array<RectangleGraphic> = []
   moveEvent = new Event<Vec2>()
   private _movementIntervalId: number = NaN
-  private _speed = 150
+  private _speed = 100
   constructor (size: number) {
     super()
     this.size = size
@@ -45,6 +45,11 @@ class NeverSnake extends Graphic {
       default:
         return 'left'
     }
+  }
+
+  stop () {
+    window.clearInterval(this._movementIntervalId)
+    this._movementIntervalId = NaN
   }
 
   createShape (position: Vec2 = new Vec2()) {

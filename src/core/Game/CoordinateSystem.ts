@@ -13,6 +13,13 @@ class CoordinateSystem {
     return this.size / this.unit + 1
   }
 
+  get localBoundary () {
+    return {
+      upperLeft: new Vec2(0, 0),
+      lowerRight: new Vec2(this.gridLength * this.unit, this.gridLength * this.unit)
+    }
+  }
+
   generateLocalPositions () {
     const result: Vec2[] = []
     for (let iy = 0; iy < this.gridLength; iy++) {
