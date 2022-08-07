@@ -1,11 +1,12 @@
 import GraphicCollection from '../Collection/GraphicCollection'
-
+import CompositeGraphicCollection from '../Collection/CompositeGraphicCollection'
 export type ViewerConstructor = {}
 
 class Viewer {
   container: HTMLElement
   canvas: HTMLCanvasElement
   graphics = new GraphicCollection()
+  compositeGraphics = new CompositeGraphicCollection()
   private width: number = 0
   private height: number = 0
   constructor (elem: HTMLElement, param: ViewerConstructor) {

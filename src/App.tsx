@@ -7,9 +7,10 @@ function App () {
   const ref = useRef<HTMLDivElement>(null)
   const { asyncCore } = useSnakeCore(ref, {
     gameOptions: {
-      unit: 10,
-      size: 500,
-      seeds: 50
+      unit: 20,
+      size: 40,
+      seeds: 10,
+      speed: 200
     }
   })
 

@@ -36,6 +36,8 @@ class Renderer {
   render () {
     this.clear()
     this.viewer.graphics.drawOnCanvas(this.viewer.ctx)
+    this.viewer.compositeGraphics.drawOnCanvas(this.viewer.ctx)
+    // this.viewer.graphics.drawOnCanvas(this.viewer.ctx)
   }
 
   clear () {

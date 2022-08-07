@@ -1,9 +1,15 @@
 import { IGraphic } from './@types'
 import { uniqueId } from 'lodash'
 import { IRenderable } from '../Renderer/@types'
+import Vec2 from '../Vector/Vec2'
 
-class Graphic implements IGraphic, IRenderable {
+abstract class AbsrtactGraphic implements IGraphic, IRenderable {
   id = uniqueId()
+  style: IGraphic['style'] = { strokeStyle: '#fff', fillStyle: '#000' }
+
+  get position () {
+    return new Vec2()
+  }
 
   init () {}
 
@@ -11,4 +17,4 @@ class Graphic implements IGraphic, IRenderable {
   }
 }
 
-export default Graphic
+export default AbsrtactGraphic

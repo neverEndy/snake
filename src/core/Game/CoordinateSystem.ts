@@ -10,13 +10,13 @@ class CoordinateSystem {
   }
 
   get gridLength () {
-    return this.size / this.unit + 1
+    return this.size
   }
 
   get localBoundary () {
     return {
       upperLeft: new Vec2(0, 0),
-      lowerRight: new Vec2(this.gridLength * this.unit, this.gridLength * this.unit)
+      lowerRight: new Vec2(this.gridLength - 1, this.gridLength - 1)
     }
   }
 
@@ -33,12 +33,12 @@ class CoordinateSystem {
   }
 
   renderGrid (ctx: CanvasRenderingContext2D) {
-    for (let i = 0; i < this.gridLength; i++) {
+    for (let i = 0; i <= this.gridLength; i++) {
       const p = i * this.unit
       const startColPoint = new Vec2(p, 0)
-      const endColPoint = new Vec2(p, this.size)
+      const endColPoint = new Vec2(p, (this.size) * this.unit)
       const startRowPoint = new Vec2(0, p)
-      const endRowPoint = new Vec2(this.size, p)
+      const endRowPoint = new Vec2((this.size) * this.unit, p)
       ctx.beginPath()
       ctx.moveTo(startColPoint.x, startColPoint.y)
       ctx.lineTo(endColPoint.x, endColPoint.y)

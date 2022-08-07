@@ -1,4 +1,4 @@
-import RectangleGraphic from '../Graphic/RectangleGraphic'
+import RectangleGraphic, { RectangleGraphicContructor } from '../Graphic/RectangleGraphic'
 import Vec2, { Direction } from '../Vector/Vec2'
 import Graphic from '../Graphic'
 import Event from '../utils/Event'
@@ -7,18 +7,24 @@ class NeverSnake extends Graphic {
   headGraphic: RectangleGraphic
   size: number
   direction: Direction = 'down'
-  position: Vec2
   body: Array<RectangleGraphic> = []
   moveEvent = new Event<Vec2>()
   private _movementIntervalId: number = NaN
   private _speed = 100
+  private _isStart = false
   constructor (size: number) {
     super()
     this.size = size
-    this.headGraphic = this.createShape()
-    this.position = this.headGraphic.startPosition
+    this.headGraphic = this.createShape(new Vec2(), { fillStyle: 'red' })
     this.nextMovement = this.nextMovement.bind(this)
-    this._movementIntervalId = window.setInterval(this.nextMovement, this.speed)
+  }
+
+  get position () {
+    return this.headGraphic.position
+  }
+
+  set position (position: Vec2) {
+    this.headGraphic.position = position.clone()
   }
 
   get speed () {
@@ -26,6 +32,10 @@ class NeverSnake extends Graphic {
   }
 
   set speed (val: number) {
+    if (!this._isStart) {
+      this._speed = val
+      return
+    }
     window.clearInterval(this._movementIntervalId)
     this._movementIntervalId = window.setInterval(this.nextMovement, val)
   }
@@ -47,36 +57,42 @@ class NeverSnake extends Graphic {
     }
   }
 
+  start () {
+    this._movementIntervalId = window.setInterval(this.nextMovement, this.speed)
+    this._isStart = true
+  }
+
   stop () {
     window.clearInterval(this._movementIntervalId)
     this._movementIntervalId = NaN
+    this._isStart = false
   }
 
-  createShape (position: Vec2 = new Vec2()) {
+  createShape (position: Vec2 = new Vec2(), style?: RectangleGraphicContructor['style']) {
     const graphic = new RectangleGraphic({
-      startPosition: position,
+      position: position,
       width: this.size,
-      height: this.size
+      height: this.size,
+      style
     })
     return graphic
   }
 
   grow () {
-    const newPosition = this.body.at(-1)?.startPosition.clone() || this.position.clone()
+    const newPosition = this.body.at(-1)?.position.clone() || this.position.clone()
     newPosition.move(this.reverseDirection, this.size)
-    const graphic = this.createShape(newPosition)
+    const graphic = this.createShape(newPosition, { fillStyle: 'gray' })
     this.body.push(graphic)
   }
 
   nextMovement () {
     const headPosition = this.position
     let refPosition = headPosition.clone()
-    headPosition.move(this.direction, this.size)
+    this.position = headPosition.move(this.direction, this.size)
     this.body.forEach(item => {
-      const position = item.startPosition
-      const clonePosition = position.clone()
-      position.move(position.getDirectionTo(refPosition)!, this.size)
-      refPosition = clonePosition
+      const newRefPosition = item.position.clone()
+      item.position = refPosition.clone()
+      refPosition = newRefPosition
     })
     this.moveEvent.dispatch(this.position)
   }
