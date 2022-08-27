@@ -2,6 +2,7 @@ import RectangleGraphic, { RectangleGraphicContructor } from '../Graphic/Rectang
 import Vec2, { Direction } from '../Vector/Vec2'
 import Graphic from '../Graphic'
 import Event from '../utils/Event'
+import SnakeControl from './SnakeControl'
 
 class NeverSnake extends Graphic {
   headGraphic: RectangleGraphic
@@ -9,6 +10,9 @@ class NeverSnake extends Graphic {
   direction: Direction = 'down'
   body: Array<RectangleGraphic> = []
   moveEvent = new Event<Vec2>()
+  growEvent = new Event<NeverSnake>()
+  control = new SnakeControl()
+  private controlEvents: Array<() => void> = []
   private _movementIntervalId: number = NaN
   private _speed = 100
   private _isStart = false
@@ -57,6 +61,22 @@ class NeverSnake extends Graphic {
     }
   }
 
+  attachControl () {
+    const removeEvents = [
+      this.control.moveUpEvent.addListener(() => this.move('up')),
+      this.control.moveRightEvent.addListener(() => this.move('right')),
+      this.control.moveDownEvent.addListener(() => this.move('down')),
+      this.control.moveLeftEvent.addListener(() => this.move('left'))
+    ]
+    this.controlEvents = removeEvents
+    this.control.start()
+  }
+
+  removeControl () {
+    this.controlEvents.forEach(remove => remove())
+    this.control.stop()
+  }
+
   start () {
     this._movementIntervalId = window.setInterval(this.nextMovement, this.speed)
     this._isStart = true
@@ -83,6 +103,7 @@ class NeverSnake extends Graphic {
     newPosition.move(this.reverseDirection, this.size)
     const graphic = this.createShape(newPosition, { fillStyle: 'gray' })
     this.body.push(graphic)
+    this.growEvent.dispatch(this)
   }
 
   nextMovement () {

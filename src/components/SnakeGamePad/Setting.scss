@@ -1,0 +1,9 @@
+.SettingContainer{
+  @apply flex flex-col;
+  .inputRowGroup{
+    @apply flex;
+    label {
+      @apply mr-2;
+    }
+  }
+}

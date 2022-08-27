@@ -1,0 +1,15 @@
+.ScoreRecord{
+  @apply bg-gray-300 p-5;
+  table {
+    @apply border-collapse w-full;
+    tr:nth-child(even){
+      @apply bg-gray-200;
+    }
+    td, th {
+      @apply border border-white p-2;
+    }
+    th {
+      @apply pt-2 text-left bg-gray-600 text-white;
+    }
+  }
+}

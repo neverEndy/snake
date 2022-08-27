@@ -1,6 +1,6 @@
 import Event from '../utils/Event'
 
-class BoardControl {
+class SnakeControl {
   container: HTMLElement
   moveUpEvent = new Event()
   moveRightEvent = new Event()
@@ -47,4 +47,4 @@ class BoardControl {
   }
 }
 
-export default BoardControl
+export default SnakeControl

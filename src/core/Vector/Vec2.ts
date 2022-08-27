@@ -19,7 +19,9 @@ class Vec2 {
   }
 
   isEqualTo (vec: Vec2) {
-    return this.x === vec.x && this.y === vec.y
+    const xCompare = Math.abs(this.x - vec.x) < 0.0001
+    const yCompare = Math.abs(this.y - vec.y) < 0.0001
+    return xCompare && yCompare
   }
 
   moveRight (dist: number = 1) {

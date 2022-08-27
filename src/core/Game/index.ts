@@ -1,13 +1,12 @@
 import Viewer from '../Viewer'
 import Renderer from '../Renderer'
 import NeverSnake from '../NeverSnake'
-import BoardControl from './BoardControl'
-import CoordinateSystem from './CoordinateSystem'
 import { shuffle } from 'lodash'
 import RectangleGraphic from '../Graphic/RectangleGraphic'
 import Vec2 from '../Vector/Vec2'
 import Event from '../utils/Event'
 import GraphicCollection from '../Collection/GraphicCollection'
+import GridBoard from './GridBoard'
 
 export type GameOptions = {
   unit: number
@@ -20,7 +19,6 @@ interface IGame {
   options: GameOptions
   viewer: Viewer
   renderer: Renderer
-  boardControl: BoardControl
   start: () => void
   stop: () => void
 }
@@ -32,30 +30,48 @@ class Game implements IGame {
   viewer: Viewer
   renderer: Renderer
   snake: NeverSnake
-  boardControl: BoardControl
-  coordinateSystem: CoordinateSystem
+  gridBoard: GridBoard
   randomSeed = new GraphicCollection()
+  failedEvent = new Event()
+  winEvent = new Event()
+  private _isStart = false
   private removeEvents: Array<ReturnType<Event['addListener']>> = []
   constructor (options: GameConstructor) {
     this.options = options
     this.viewer = options.viewer
     this.renderer = options.renderer
-    this.boardControl = new BoardControl()
-    this.coordinateSystem = new CoordinateSystem({ ...options })
+    this.gridBoard = new GridBoard(options)
     this.snake = new NeverSnake(options.unit)
     this.viewer.compositeGraphics.add(this.randomSeed)
-
-    this.init()
   }
 
-  init () {
-    this.clearRandomSeed()
-    this.generateRandomSeed()
-    this.initSnake()
+  setSpeed (val: number) {
+    this.snake.speed = val
+    this.options.speed = val
+  }
+
+  setUnit (val: number) {
+    this.gridBoard.coordinateSystem.unit = val
+    this.options.unit = val
+    this.snake.size = val
+  }
+
+  setSize (val: number) {
+    this.gridBoard.coordinateSystem.size = val
+    this.options.size = val
+    this.setUnit(500 / val)
+    this.stop()
+  }
+
+  setSeeds (val: number) {
+    this.options.seeds = val
+  }
+
+  get coordinateSystem () {
+    return this.gridBoard.coordinateSystem
   }
 
   initSnake () {
-    this.snake = new NeverSnake(this.options.unit)
     ;(window as any).snake = this.snake
     this.viewer.graphics.add(this.snake)
     this.snake.speed = this.options.speed
@@ -67,26 +83,46 @@ class Game implements IGame {
 
   generateRandomSeed () {
     const positions = this.coordinateSystem.generateLocalPositions()
-    const targetPositions = shuffle(positions).slice(0, this.options.seeds)
-    for (const pos of targetPositions) {
-      const graphic = new RectangleGraphic({
-        position: pos,
-        width: this.options.unit,
-        height: this.options.unit,
-        style: { fillStyle: 'green' }
-      })
-      this.randomSeed.add(graphic)
+    const disabledPositions = [
+      ...this.snake.body.map(item => item.position.clone()),
+      this.snake.position.clone()
+    ]
+    const validPositions = []
+    for (const pos of positions) {
+      const isDisabled = !!disabledPositions.find(disablePos => disablePos.isEqualTo(pos))
+      if (isDisabled) continue
+      validPositions.push(pos)
     }
+    const seedsAmount = validPositions.length > this.options.seeds ? this.options.seeds : validPositions.length
+    const targetPositions = shuffle(validPositions).slice(0, seedsAmount)
+
+    const seedGraphics = targetPositions.map(pos => new RectangleGraphic({
+      position: pos,
+      width: this.options.unit,
+      height: this.options.unit,
+      style: { fillStyle: 'green' }
+    }))
+
+    seedGraphics.forEach(graphic => this.randomSeed.add(graphic))
+
+    return seedGraphics
   }
 
   registerSnakeMove () {
-    const handleSnakeGrow = (position: Vec2) => {
+    const handleSnakeGrow = (snakePosition: Vec2) => {
       for (const seed of this.randomSeed.values) {
-        if (seed.position.isEqualTo(position)) {
+        if (seed.position.isEqualTo(snakePosition)) {
           this.randomSeed.remove(seed)
           this.snake.grow()
           break
         }
+      }
+      if (this.randomSeed.values.length === 0) {
+        this.generateRandomSeed()
+      }
+      if (this.snake.body.length === this.options.size ** 2) {
+        this.stop()
+        this.winEvent.dispatch()
       }
     }
     const handleBoundaryCollision = (position: Vec2) => {
@@ -116,41 +152,46 @@ class Game implements IGame {
         if (bodyItemPosition.isEqualTo(snakePosition)) {
           this.stop()
           this.snake.stop()
+          this.failedEvent.dispatch()
         }
       }
     }
     const removeEvents = [
-      this.snake.moveEvent.addListener(handleSnakeGrow),
+      this.snake.moveEvent.addListener(handleSnakeSelfCollision),
       this.snake.moveEvent.addListener(handleBoundaryCollision),
-      this.snake.moveEvent.addListener(handleSnakeSelfCollision)
+      this.snake.moveEvent.addListener(handleSnakeGrow)
     ]
     this.removeEvents.concat(removeEvents)
   }
 
-  registerControl () {
-    const removeEvents = [
-      this.boardControl.moveUpEvent.addListener(() => this.snake.move('up')),
-      this.boardControl.moveRightEvent.addListener(() => this.snake.move('right')),
-      this.boardControl.moveDownEvent.addListener(() => this.snake.move('down')),
-      this.boardControl.moveLeftEvent.addListener(() => this.snake.move('left'))
-    ]
-    this.removeEvents.concat(removeEvents)
+  registerGridRender () {
+    this.removeEvents.concat([
+      this.renderer.addTask(() => {
+        const ctx = this.viewer.ctx
+        this.gridBoard.renderGrid(ctx)
+      })
+    ])
   }
 
   start () {
+    this._isStart && this.stop()
+    this._isStart = true
+    this.generateRandomSeed()
+    this.initSnake()
     this.snake.start()
-    this.boardControl.start()
-    this.registerControl()
+    this.snake.attachControl()
     this.registerSnakeMove()
-    this.renderer.addTask(() => {
-      const ctx = this.viewer.ctx
-      this.coordinateSystem.renderGrid(ctx)
-    })
+    this.registerGridRender()
   }
 
   stop () {
-    this.boardControl.stop()
+    this._isStart = true
+    this.snake.removeControl()
+    this.snake.stop()
+    this.clearRandomSeed()
     this.removeEvents.forEach(remove => remove())
+    this.viewer.graphics.remove(this.snake)
+    this.snake = new NeverSnake(this.options.unit)
   }
 }
 
