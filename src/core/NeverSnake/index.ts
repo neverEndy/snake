@@ -1,5 +1,5 @@
 import RectangleGraphic, { RectangleGraphicContructor } from '../Graphic/RectangleGraphic'
-import Vec2, { Direction } from '../Vector/Vec2'
+import Vec2 from '../Vector/Vec2'
 import Graphic from '../Graphic'
 import Event from '../utils/Event'
 import SnakeControl from './SnakeControl'
@@ -7,7 +7,7 @@ import SnakeControl from './SnakeControl'
 class NeverSnake extends Graphic {
   headGraphic: RectangleGraphic
   size: number
-  direction: Direction = 'down'
+  direction: Vec2 = Vec2.CreateDirectionDown()
   body: Array<RectangleGraphic> = []
   moveEvent = new Event<Vec2>()
   growEvent = new Event<NeverSnake>()
@@ -48,25 +48,16 @@ class NeverSnake extends Graphic {
     return this.body.length
   }
 
-  get reverseDirection (): Direction {
-    switch (this.direction) {
-      case 'up':
-        return 'down'
-      case 'down':
-        return 'up'
-      case 'left':
-        return 'right'
-      default:
-        return 'left'
-    }
+  get reverseDirection (): Vec2 {
+    return new Vec2(this.direction.x * -1, this.direction.y * -1)
   }
 
   attachControl () {
     const removeEvents = [
-      this.control.moveUpEvent.addListener(() => this.move('up')),
-      this.control.moveRightEvent.addListener(() => this.move('right')),
-      this.control.moveDownEvent.addListener(() => this.move('down')),
-      this.control.moveLeftEvent.addListener(() => this.move('left'))
+      this.control.moveUpEvent.addListener(() => this.move(Vec2.CreateDirectionUp())),
+      this.control.moveRightEvent.addListener(() => this.move(Vec2.CreateDirectionRight())),
+      this.control.moveDownEvent.addListener(() => this.move(Vec2.CreateDirectionDown())),
+      this.control.moveLeftEvent.addListener(() => this.move(Vec2.CreateDirectionLeft()))
     ]
     this.controlEvents = removeEvents
     this.control.start()
@@ -118,13 +109,19 @@ class NeverSnake extends Graphic {
     this.moveEvent.dispatch(this.position)
   }
 
-  move (direction: Direction) {
-    this.direction = direction
+  move (direction: Vec2) {
+    const isCollision = this.checkSelfDirectionCollision(direction)
+    if (isCollision) return
+    this.direction = direction.clone()
   }
 
   drawOnCanvas (ctx: CanvasRenderingContext2D) {
     this.headGraphic.drawOnCanvas(ctx)
     this.body.forEach(graphic => graphic.drawOnCanvas(ctx))
+  }
+
+  private checkSelfDirectionCollision (nextDirection: Vec2) {
+    return this.reverseDirection.isEqualTo(nextDirection)
   }
 }
 

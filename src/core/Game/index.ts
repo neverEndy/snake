@@ -59,7 +59,7 @@ class Game implements IGame {
   setSize (val: number) {
     this.gridBoard.coordinateSystem.size = val
     this.options.size = val
-    this.setUnit(500 / val)
+    this.setUnit(350 / val)
     this.stop()
   }
 

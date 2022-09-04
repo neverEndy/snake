@@ -14,6 +14,7 @@ abstract class AbsrtactGraphic implements IGraphic, IRenderable {
   init () {}
 
   drawOnCanvas (ctx: CanvasRenderingContext2D) {
+    console.warn('override draw method', ctx)
   }
 }
 

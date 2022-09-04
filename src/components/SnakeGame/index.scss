@@ -3,10 +3,10 @@
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
-  .SnakeContainer{
-    @apply flex flex-col m-auto;
-    &-canvas{
-      @apply w-[500px] h-[500px] m-auto bg-gray-100;
-    }
-  }
+  // .SnakeContainer{
+  //   @apply flex flex-col m-auto;
+  //   &-canvas{
+  //     @apply w-[500px] h-[500px] m-auto bg-gray-100;
+  //   }
+  // }
 }

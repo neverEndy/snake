@@ -4,9 +4,9 @@
   background-repeat: no-repeat;
   background-size: cover;
   .SnakeContainer{
-    @apply flex flex-col m-auto;
+    @apply flex flex-col my-5 mx-auto;
     &-canvas{
-      @apply w-[500px] h-[500px] m-auto bg-gray-100;
+      @apply w-[350px] h-[350px] m-auto bg-gray-100;
     }
   }
 }

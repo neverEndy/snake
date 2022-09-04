@@ -7,9 +7,11 @@ class Viewer {
   canvas: HTMLCanvasElement
   graphics = new GraphicCollection()
   compositeGraphics = new CompositeGraphicCollection()
+  options : ViewerConstructor
   private width: number = 0
   private height: number = 0
-  constructor (elem: HTMLElement, param: ViewerConstructor) {
+  constructor (elem: HTMLElement, options: ViewerConstructor) {
+    this.options = options
     this.container = elem
     this.canvas = this.createCanvas()
     this.container.appendChild(this.canvas)

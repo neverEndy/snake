@@ -6,6 +6,8 @@ import useScoreStorage, { ScoreStorage } from '../../hooks/useScoreStorage'
 import GameRecordPopup from './modules/GameRecordPopup'
 import RecordList from './modules/RecordList'
 import SnakeCore from 'src/core'
+import VirtualKeyboard, { VirtualKeyType } from './modules/VirtualKeyboard'
+import Vec2 from 'src/core/Vector/Vec2'
 
 export type SnakeGameContext = {
   score: number
@@ -23,7 +25,7 @@ const SnakeGame = () => {
   const [recordOpen, setRecordOpen] = useState(false)
   const { asyncCore } = useSnakeCore(ref, {
     gameOptions: {
-      unit: 500 / 10,
+      unit: 350 / 10,
       size: 10,
       seeds: 5,
       speed: 150
@@ -58,6 +60,24 @@ const SnakeGame = () => {
     setRecordOpen(true)
   }
 
+  const handleVirtualKey = async (key: VirtualKeyType) => {
+    const game = (await asyncCore).game
+    switch (key) {
+      case VirtualKeyType.UP:
+        game.snake.move(Vec2.CreateDirectionUp())
+        break
+      case VirtualKeyType.DOWN:
+        game.snake.move(Vec2.CreateDirectionDown())
+        break
+      case VirtualKeyType.RIGHT:
+        game.snake.move(Vec2.CreateDirectionRight())
+        break
+      case VirtualKeyType.LEFT:
+        game.snake.move(Vec2.CreateDirectionLeft())
+        break
+    }
+  }
+
   useEffect(() => {
     (async () => {
       const core = await asyncCore
@@ -80,6 +100,7 @@ const SnakeGame = () => {
           <SnakeGamePad onStart={handleStartGame} onSetting={handleGameSetting}/>
           <p>score: {score}</p>
           <div ref={ref} className='SnakeContainer-canvas'></div>
+          <VirtualKeyboard onKeyDown={handleVirtualKey}/>
         </div>
         <RecordList />
        <GameRecordPopup open={recordOpen} onClose={() => setRecordOpen(!recordOpen)} />

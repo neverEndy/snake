@@ -1,11 +1,25 @@
-export type Direction = 'up' | 'right' | 'down' | 'left'
-
 class Vec2 {
   x: number
   y: number
   constructor (x: number = 0, y: number = 0) {
     this.x = x
     this.y = y
+  }
+
+  static CreateDirectionUp () {
+    return new Vec2(0, -1)
+  }
+
+  static CreateDirectionDown () {
+    return new Vec2(0, 1)
+  }
+
+  static CreateDirectionRight () {
+    return new Vec2(1, 0)
+  }
+
+  static CreateDirectionLeft () {
+    return new Vec2(-1, 0)
   }
 
   clone () {
@@ -44,40 +58,41 @@ class Vec2 {
     return this
   }
 
-  move (direction: Direction, val: number = 1) {
-    switch (direction) {
-      case 'down':
-        return this.moveDown(val)
-      case 'left':
-        return this.moveLeft(val)
-      case 'right':
-        return this.moveRight(val)
-      case 'up':
-        return this.moveUp(val)
-    }
+  move (direction: Vec2, val: number = 1) {
+    const isDown = direction.isEqualTo(Vec2.CreateDirectionDown())
+    const isUp = direction.isEqualTo(Vec2.CreateDirectionUp())
+    const isRight = direction.isEqualTo(Vec2.CreateDirectionRight())
+    const isLeft = direction.isEqualTo(Vec2.CreateDirectionLeft())
+
+    if (isDown) return this.moveDown(val)
+    if (isUp) return this.moveUp(val)
+    if (isRight) return this.moveRight(val)
+    if (isLeft) return this.moveLeft(val)
+
+    throw new Error(`direction x: ${direction.x}, y: ${direction.y}, is not typeof direction`)
   }
 
-  moveReverse (direction: Direction, val: number = 1) {
-    const getReverse = (dir: Direction) => {
-      switch (dir) {
-        case 'up':
-          return 'down'
-        case 'down':
-          return 'up'
-        case 'left':
-          return 'right'
-        default:
-          return 'left'
-      }
+  moveReverse (direction: Vec2, val: number = 1) {
+    const isDown = direction.isEqualTo(Vec2.CreateDirectionDown())
+    const isUp = direction.isEqualTo(Vec2.CreateDirectionUp())
+    const isRight = direction.isEqualTo(Vec2.CreateDirectionRight())
+    const isLeft = direction.isEqualTo(Vec2.CreateDirectionLeft())
+
+    const getReverse = (dir: Vec2) => {
+      if (isDown) return Vec2.CreateDirectionUp()
+      if (isUp) return Vec2.CreateDirectionDown()
+      if (isRight) return Vec2.CreateDirectionLeft()
+      if (isLeft) return Vec2.CreateDirectionRight()
+      throw new Error(`direction x: ${dir.x}, y: ${dir.y}, is not typeof direction`)
     }
     return this.move(getReverse(direction), val)
   }
 
-  getDirectionTo (vec2: Vec2): Direction | undefined {
-    if (vec2.x > this.x) return 'right'
-    if (vec2.x < this.x) return 'left'
-    if (vec2.y > this.y) return 'down'
-    if (vec2.y < this.y) return 'up'
+  getDirectionTo (vec2: Vec2): Vec2 | undefined {
+    if (vec2.x > this.x) return Vec2.CreateDirectionRight()
+    if (vec2.x < this.x) return Vec2.CreateDirectionLeft()
+    if (vec2.y > this.y) return Vec2.CreateDirectionDown()
+    if (vec2.y < this.y) return Vec2.CreateDirectionUp()
     return undefined
   }
 }

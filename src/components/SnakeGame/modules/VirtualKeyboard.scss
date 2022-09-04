@@ -1,0 +1,15 @@
+.VirtualKeyboard {
+  $size: 50px;
+  @apply grid justify-center justify-items-center;
+  gap: 10px;
+  grid-template-columns: repeat(3, $size);
+  span {
+    @apply outline-1 bg-gray-600 text-white rounded-md text-center;
+    width: $size;
+    HEIGHT: $size;
+    line-height: $size;
+    &.empty {
+      @apply outline-none bg-opacity-0;
+    }
+  }
+}
