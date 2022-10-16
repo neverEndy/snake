@@ -31,7 +31,7 @@ jobs:
           git init
           git config --global user.name ${{github.triggering_actor}}
           git status
-          git remote add origin https://${{secrets.GIT_TOKEN}}@github.com/[username]/[repo-name].git
+          git remote add origin https://${{secrets.GIT_TOKEN}}@github.com/${{repository}}.git
           git checkout -b gh-pages
           git add --all
           git commit -m "Deploy ReactApp to gh-pages" 
