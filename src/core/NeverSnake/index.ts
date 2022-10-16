@@ -81,7 +81,7 @@ class NeverSnake extends Graphic {
 
   createShape (position: Vec2 = new Vec2(), style?: RectangleGraphicContructor['style']) {
     const graphic = new RectangleGraphic({
-      position: position,
+      position,
       width: this.size,
       height: this.size,
       style
