@@ -22,11 +22,10 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Node Packages Install
-        run: npm install
+        run: npm ci
 
       - name: deploy
         run: |
-          rm -rf node_modules/.cache
           npm run build
           cd ./build
           git init
